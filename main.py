@@ -1,6 +1,6 @@
 import pygame
 from random import randint
-
+from time import time
 max_frame = 30       
 frame = max_frame-1
 
@@ -19,10 +19,13 @@ pygame.init()
 
 window = pygame.display.set_mode((500,500))
 
-window.fill(LIGHT_BLUE)
 clock = pygame.time.Clock()
 
 finish = True
+
+Font = pygame.font.SysFont('Verdana',25)
+Font1 = pygame.font.SysFont('Comic sans',50)
+
 
 class Area():
     def __init__(self,x,y,width,height,color):
@@ -57,32 +60,74 @@ cards = []
 for i in range(4):
     cards.append(Label(112*i+50,200,75,115,YELLOW,'CLICK'))
 
-for i in cards:
-    i.draw() 
 
+start_time = time()
+cur_time = start_time
+total_time = 10
+score = 0
+text_timer = Font.render('Время: ' + str(int(cur_time)), True, BLUE)
+
+text_score = Font.render('Счет: ' + str(score), True, BLUE)
+
+text_win = Font1.render('ВЫ ВЫИГРАЛИ!', True, BLACK)
+text_lose = Font1.render('ВЫ ПРОИГРАЛИ', True, BLACK)
+run = True
 while finish:
-    frame+=1
-    if frame == max_frame:         
-        rand_num = randint(0,3)
-        frame = 0
-    for e in pygame.event.get():
-        if e.type == pygame.QUIT:
-            finish = False
-        if e.type == pygame.MOUSEBUTTONDOWN:
-            if e.button == 1:
-                x,y = e.pos
-                for i in range(len(cards)):
-                    if cards[i].collidepoint(x,y):
-                        if i == rand_num:
-                            cards[i].color(GREEN)
-                        else:
-                            cards[i].color(RED)         
-    pygame.display.set_caption('FPS: '+str(int(clock.get_fps())))  
-    for i in range(len(cards)):
-        cards[i].draw()
-        if (frame // 2) == 0:
-            cards[i].color(YELLOW)
-        if i == rand_num:
-            cards[i].draw_label(15,45)       
-    clock.tick(60)
-    pygame.display.update()
+    if run: 
+        window.fill(LIGHT_BLUE)
+        frame+=1
+        if frame // 6 == 0:
+            if cur_time != 0:
+                cur_time = 10 - int(time() - start_time )
+                text_timer = Font.render('Время: ' + str(int(cur_time)), True, BLUE)
+            else:
+                run = False    
+        if frame == max_frame:         
+            rand_num = randint(0,3)
+            frame = 0
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                finish = False
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                if e.button == 1:
+                    x,y = e.pos
+                    for i in range(len(cards)):
+                        if cards[i].collidepoint(x,y):
+                            if i == rand_num:
+                                cards[i].color(GREEN)
+                                score += 1
+                            else:
+                                cards[i].color(RED) 
+                                score -= 1  
+                            text_score = Font.render('Счет: ' + str(min(max(0,score),10)), True, BLUE)          
+        pygame.display.set_caption('FPS: '+str(int(clock.get_fps())))  
+        for i in range(len(cards)):
+            cards[i].draw()
+            if (frame // 2) == 0:
+                cards[i].color(YELLOW)
+            if i == rand_num:
+                cards[i].draw_label(15,45)       
+        clock.tick(60)
+        window.blit(text_timer,(25,25))
+        window.blit(text_score,(375,25))
+        pygame.display.update()
+    else:
+        if score == 10:
+            window.fill(GREEN)
+            window.blit(text_win,(125,150))
+        else:
+            window.fill(RED)
+            window.blit(text_lose,(125,150))
+        pygame.display.update()    
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                finish = False            
+            elif e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_SPACE:
+                    start_time = time()
+                    cur_time = start_time
+                    total_time = 10
+                    score = 0
+                    text_timer = Font.render('Время: ' + str(int(cur_time)), True, BLUE)
+                    text_score = Font.render('Счет: ' + str(score), True, BLUE)
+                    run = True  
